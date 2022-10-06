@@ -169,7 +169,7 @@ getModelsFromGithub <- function(
     githubModelFolder <- githubSettings$githubModelFolder[i] #'full_model'
     
     downloadCheck <- tryCatch({
-      download.file(
+      utils::download.file(
         url = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
         destfile = file.path(tempdir(), "tempGitHub.zip")
       )}, error = function(e){ ParallelLogger::logInfo('GitHub repository download failed') ; return(NULL)}
