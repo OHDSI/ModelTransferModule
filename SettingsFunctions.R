@@ -1,6 +1,7 @@
 createModelTransferModuleSpecifications <- function(
  s3Settings = NULL,
- githubSettings = NULL
+ githubSettings = NULL,
+ localFileSettings = NULL
 ) {
   
   specifications <- list(
@@ -10,7 +11,8 @@ createModelTransferModuleSpecifications <- function(
     remoteUsername = "ohdsi",
     settings = list(
       s3Settings = s3Settings,
-      githubSettings = githubSettings
+      githubSettings = githubSettings,
+      localFileSettings =  localFileSettings
     )
   )
   class(specifications) <- c("ModelTransferModuleSpecifications", "ModuleSpecifications")

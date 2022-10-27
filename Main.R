@@ -39,6 +39,8 @@ execute <- function(jobContext) {
   workFolder <- jobContext$moduleExecutionSettings$workSubFolder
   resultsFolder <- jobContext$moduleExecutionSettings$resultsSubFolder
   
+  modelSaveLocation <- jobContext$moduleExecutionSettings$workSubFolder #jobContext$sharedResources$modelSaveLocation
+  
   rlang::inform("Transfering models")
   moduleInfo <- getModuleInfo()
   
@@ -46,10 +48,12 @@ execute <- function(jobContext) {
   s3Settings <- jobContext$settings$s3Settings
   # finding github details
   githubSettings <- jobContext$settings$githubSettings
+  # finding localFile details
+  localFileSettings <- jobContext$settings$localFileSettings
   
   modelLocationsS3 <- tryCatch({getModelsFromS3(
     s3Settings = s3Settings$locations,
-    saveFolder = s3Settings$modelSaveFolder
+    saveFolder = modelSaveLocation
   )}, error = function(e){ParallelLogger::logInfo(e); return(NULL)}
   )
   if(!is.null(modelLocationsS3)){
@@ -58,15 +62,73 @@ execute <- function(jobContext) {
   
   modelLocationsGithub <- tryCatch({getModelsFromGithub(
     githubSettings = githubSettings$locations,
-    saveFolder = githubSettings$modelSaveFolder
+    saveFolder = modelSaveLocation
   )}, error = function(e){ParallelLogger::logInfo(e); return(NULL)}
   )
   if(!is.null(modelLocationsGithub)){
     readr::write_csv(modelLocationsGithub, file = file.path(resultsFolder, 'github_export.csv'))
   }
   
+  modelLocationsLocalFiles <- tryCatch({getModelsFromLocalFiles(
+    localFileSettings = localFileSettings$locations,
+    saveFolder = modelSaveLocation
+  )}, error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+  )
+  if(!is.null(modelLocationsS3)){
+    readr::write_csv(modelLocationsS3, file = file.path(resultsFolder, 'local_export.csv'))
+  }
+  
 }
 
+getModelsFromLocalFiles <- function(
+  localFileSettings,
+  saveFolder
+){
+  
+  if(is.null(localFileSettings)){
+    return(NULL)
+  }
+  
+  if(!dir.exists(file.path(saveFolder, "models"))){
+    dir.create(file.path(saveFolder, "models"), recursive = T)
+  }
+  
+  info <- data.frame()
+  i <- 0
+  for(modelLoc in localFileSettings){
+    i <- i+1
+    
+    tempModel <- tryCatch({
+      PatientLevelPrediction::loadPlpModel(modelLoc)
+    },
+    error = function(e){ParallelLogger::logInfo(e); return(NULL)}
+    )
+    
+    modelSaved <- F
+    saveToLoc <- ''
+    
+    if(!is.null(tempModel)){
+      saveToLoc <- file.path(saveFolder, "models", paste0('model_local_', i))
+      PatientLevelPrediction::savePlpModel(
+        plpModel = tempModel, 
+        dirPath = saveToLoc
+      )
+      modelSaved <- T
+      
+    }
+
+    info <- rbind(
+      info,
+      data.frame(
+        originalLocation = modelLoc, 
+        modelSavedLocally = modelSaved, 
+        strategusLocation = saveToLoc
+      )
+    )
+    
+  }
+  return(info)
+}
 
 # code that takes s3 details and download the models and returns the locations plus details as data.frame
 getModelsFromS3 <- function(
@@ -107,7 +169,7 @@ getModelsFromS3 <- function(
         if(!dir.exists(file.path(saveFolder, "models"))){
           dir.create(file.path(saveFolder, "models"), recursive = T)
         }
-        saveToLoc <- file.path(saveFolder, "models", paste0("model_",i,))
+        saveToLoc <- file.path(saveFolder, "models", paste0("model_s3_",i,))
         
         # move the model to a local file
         aws.s3::save_object(
@@ -157,56 +219,70 @@ getModelsFromGithub <- function(
   
   info <- data.frame()
   
-  for(i in 1:nrow(githubSettings)){
+  for(i in 1:length(githubSettings)){
     
-    modelSaved <- F
-    saveToLoc <- ''
-    
-    githubUser <- githubSettings$githubUser[i] #'ohdsi-studies'
-    githubRepository <- githubSettings$githubRepository[1] #'lungCancerPrognostic'
-    githubBranch <- githubSettings$githubBranch[i] #'master'
-    githubModelsFolder <- githubSettings$githubModelsFolder[i]  #'models'
-    githubModelFolder <- githubSettings$githubModelFolder[i] #'full_model'
-    
+    githubUser <- githubSettings[[i]]$githubUser #'ohdsi-studies'
+    githubRepository <- githubSettings[[i]]$githubRepository #'lungCancerPrognostic'
+    githubBranch <- githubSettings[[i]]$githubBranch #'master'
+
     downloadCheck <- tryCatch({
       utils::download.file(
         url = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
         destfile = file.path(tempdir(), "tempGitHub.zip")
       )}, error = function(e){ ParallelLogger::logInfo('GitHub repository download failed') ; return(NULL)}
     )
+    
     if(!is.null(downloadCheck)){
       # unzip into the workFolder
       OhdsiSharing::decompressFolder(
         sourceFileName = file.path(tempdir(), "tempGitHub.zip"), 
         targetFolder = file.path(tempdir(), "tempGitHub")
       )
-      
-      tempModelLocation <- file.path(file.path(tempdir(), "tempGitHub"), dir(file.path(file.path(tempdir(), "tempGitHub"))), 'inst', githubModelsFolder, githubModelFolder )
-      
-      if(!dir.exists(file.path(saveFolder,githubModelFolder))){
-        dir.create(file.path(saveFolder, githubModelFolder), recursive = T)
-      }
-      for(dirEntry in dir(tempModelLocation)){
-        file.copy(
-          from = file.path(tempModelLocation, dirEntry), 
-          to = file.path(saveFolder,githubModelFolder), 
-          recursive = TRUE
+      for(j in 1:length(githubSettings[[i]]$githubModelsFolder)){
+        githubModelsFolder <- githubSettings[[i]]$githubModelsFolder[j]  #'models'
+        githubModelFolder <- githubSettings[[i]]$githubModelFolder[j] #'full_model'
+        
+        tempModelLocation <- file.path(file.path(tempdir(), "tempGitHub"), dir(file.path(file.path(tempdir(), "tempGitHub"))), 'inst', githubModelsFolder, githubModelFolder )
+        
+        if(!dir.exists(file.path(saveFolder,"models",paste0('model_github_', i, '_', j)))){
+          dir.create(file.path(saveFolder,"models",paste0('model_github_', i, '_', j)), recursive = T)
+        }
+        for(dirEntry in dir(tempModelLocation)){
+          file.copy(
+            from = file.path(tempModelLocation, dirEntry), 
+            to = file.path(saveFolder,"models",paste0('model_github_', i, '_', j)), #issues if same modelFolder name in different github repos
+            recursive = TRUE
+          )
+        }
+        
+        modelSaved <- T
+        saveToLoc <- file.path(saveFolder,"models",paste0('model_github_', i, '_', j))
+        
+        info <- rbind(
+          info,
+          data.frame(
+            githubLocation = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
+            githubPath = file.path('inst', githubModelsFolder, githubModelFolder),
+            modelSavedLocally = modelSaved, 
+            localLocation = saveToLoc
+          )
         )
-      }
+        
+      } 
       
-      modelSaved <- T
-      saveToLoc <- 'file.path(saveFolder,githubModelFolder)'
-    }
-    
-    info <- rbind(
-      info,
-      data.frame(
-        githubLocation = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
-        githubPath = file.path('inst', githubModelsFolder, githubModelFolder),
-        modelSavedLocally = modelSaved, 
-        localLocation = saveToLoc
+    } else{
+      
+      info <- rbind(
+        info,
+        data.frame(
+          githubLocation = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
+          githubPath = file.path('inst', githubSettings[[i]]$githubModelsFolder, githubSettings[[i]]$githubModelFolder),
+          modelSavedLocally = F, 
+          localLocation = ''
+        )
       )
-    )
+    }
+      
     
   }
 
