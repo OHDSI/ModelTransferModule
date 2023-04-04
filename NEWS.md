@@ -1,3 +1,7 @@
+ModelTransferModule 0.0.2
+=======================
+Fixed tests
+
 ModelTransferModule 0.0.1
 =======================
 
