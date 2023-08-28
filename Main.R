@@ -52,7 +52,7 @@ execute <- function(jobContext) {
   localFileSettings <- jobContext$settings$localFileSettings
   
   modelLocationsS3 <- tryCatch({getModelsFromS3(
-    s3Settings = s3Settings$locations,
+    s3Settings = s3Settings,
     saveFolder = modelSaveLocation
   )}, error = function(e){ParallelLogger::logInfo(e); return(NULL)}
   )

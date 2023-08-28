@@ -6,7 +6,7 @@ createModelTransferModuleSpecifications <- function(
   
   specifications <- list(
     module = "ModelTransferModule",
-    version = "0.0.4",
+    version = "0.0.5",
     remoteRepo = "github.com",
     remoteUsername = "ohdsi",
     settings = list(
