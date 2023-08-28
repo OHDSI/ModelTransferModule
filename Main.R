@@ -169,7 +169,7 @@ getModelsFromS3 <- function(
         if(!dir.exists(file.path(saveFolder, "models"))){
           dir.create(file.path(saveFolder, "models"), recursive = T)
         }
-        saveToLoc <- file.path(saveFolder, "models", paste0("model_s3_",i,))
+        saveToLoc <- file.path(saveFolder, "models", paste0("model_s3_",i))
         
         # move the model to a local file
         aws.s3::save_object(
