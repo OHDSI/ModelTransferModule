@@ -170,19 +170,20 @@ getModelsFromS3 <- function(
           dir.create(file.path(saveFolder, "models"), recursive = T)
         }
         saveToLoc <- file.path(saveFolder, "models", paste0("model_s3_",i))
+        tempDir <- file.path(tempdir(), paste0('model',i,'.zip'))
         
         # move the model to a local file
         aws.s3::save_object(
           object = s3Settings$modelZipLocation[i],
           bucket = s3Settings$bucket[i], 
           region = s3Settings$region[i],
-          file = file.path(tempdir(), paste0('model',i,'.zip'))
+          file = tempDir
         )
         modelSaved <- T
         
         # unzip into the workFolder
         OhdsiSharing::decompressFolder(
-          sourceFileName = file.path(tempdir(), paste0('model',i,'.zip')), 
+          sourceFileName = tempDir, 
           targetFolder = saveToLoc 
           )
         
