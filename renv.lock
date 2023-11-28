@@ -1000,11 +1000,10 @@
     },
     "renv": {
       "Package": "renv",
-      "Version": "1.0.2",
-      "OS_type": NA,
+      "Version": "1.0.3",
+      "OS_type": null,
       "Repository": "CRAN",
-      "Source": "Repository",
-      "Requirements": []
+      "Source": "Repository"
     },
     "reticulate": {
       "Package": "reticulate",
