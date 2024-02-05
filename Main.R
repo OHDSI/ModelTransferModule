@@ -89,44 +89,30 @@ getModelsFromLocalFiles <- function(
     return(NULL)
   }
   
-  if(!dir.exists(file.path(saveFolder, "models"))){
-    dir.create(file.path(saveFolder, "models"), recursive = T)
+  if(!fs::dir_exists(fs::path(saveFolder, "models"))){
+    fs::dir_create(fs::path(saveFolder, "models"), recurse = T)
   }
   
-  info <- data.frame()
-  i <- 0
-  for(modelLoc in localFileSettings){
-    i <- i+1
-    
-    tempModel <- tryCatch({
-      PatientLevelPrediction::loadPlpModel(modelLoc)
-    },
-    error = function(e){ParallelLogger::logInfo(e); return(NULL)}
-    )
-    
-    modelSaved <- F
-    saveToLoc <- ''
-    
-    if(!is.null(tempModel)){
-      saveToLoc <- file.path(saveFolder, "models", paste0('model_local_', i))
-      PatientLevelPrediction::savePlpModel(
-        plpModel = tempModel, 
-        dirPath = saveToLoc
-      )
-      modelSaved <- T
-      
+  saveFolder <- fs::path(saveFolder, "models")
+  
+  localFileSettings <- fs::path_expand(localFileSettings)
+  saveFolder <- fs::path_expand(saveFolder)
+  
+  contents <- fs::dir_ls(localFileSettings)
+  
+  for(item in contents){
+    # Determine the target path in the destination folder
+    targetPath <- fs::path(saveFolder, fs::path_file(item))
+    # Copy the item to the destination
+    if (fs::dir_exists(item)) {
+      fs::dir_create(targetPath) # Ensure the directory exists before copying into it
+      fs::dir_copy(item, targetPath)
+    } else {
+      fs::file_copy(item, targetPath)
     }
-    
-    info <- rbind(
-      info,
-      data.frame(
-        originalLocation = modelLoc, 
-        modelSavedLocally = modelSaved, 
-        strategusLocation = saveToLoc
-      )
-    )
-    
   }
+
+  info <- data.frame()
   return(info)
 }
 
@@ -169,10 +155,10 @@ getModelsFromS3 <- function(
       analyses <- findAnalysesNames(bucket, workDir, region)
       
       if(length(analyses) > 0) {
-        if(!dir.exists(file.path(saveFolder, "models"))){
-          dir.create(file.path(saveFolder, "models"), recursive = T)
+        if(!fs::dir_exists(fs::path(saveFolder, "models"))){
+          fs::dir_create(fs::path(saveFolder, "models"), recursive = T)
         }
-        saveToLoc <- file.path(saveFolder, "models")
+        saveToLoc <- fs::path(saveFolder, "models")
         
         for (analysis in analyses) {
           analysis_paths <- paths[fs::path_has_parent(paths, fs::path(workDir, analysis))]
