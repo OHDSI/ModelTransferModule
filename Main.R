@@ -90,7 +90,7 @@ getModelsFromLocalFiles <- function(
   }
   
   if(!fs::dir_exists(fs::path(saveFolder, "models"))){
-    fs::dir_create(fs::path(saveFolder, "models"), recurse = T)
+    dir.create(fs::path(saveFolder, "models"), recursive = T)
   }
   
   saveFolder <- fs::path(saveFolder, "models")
@@ -105,7 +105,7 @@ getModelsFromLocalFiles <- function(
     targetPath <- fs::path(saveFolder, fs::path_file(item))
     # Copy the item to the destination
     if (fs::dir_exists(item)) {
-      fs::dir_create(targetPath) # Ensure the directory exists before copying into it
+      dir.create(targetPath) # Ensure the directory exists before copying into it
       fs::dir_copy(item, targetPath)
     } else {
       fs::file_copy(item, targetPath)
@@ -156,7 +156,7 @@ getModelsFromS3 <- function(
       
       if(length(analyses) > 0) {
         if(!fs::dir_exists(fs::path(saveFolder, "models"))){
-          fs::dir_create(fs::path(saveFolder, "models"), mode="u=rw,go=rw", recurse = T)
+          dir.create(fs::path(saveFolder, "models"), recursive = T)
         }
         saveToLoc <- fs::path(saveFolder, "models")
         
