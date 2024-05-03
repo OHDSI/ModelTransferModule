@@ -156,7 +156,7 @@ getModelsFromS3 <- function(
       
       if(length(analyses) > 0) {
         if(!fs::dir_exists(fs::path(saveFolder, "models"))){
-          fs::dir_create(fs::path(saveFolder, "models"), recursive = T)
+          fs::dir_create(fs::path(saveFolder, "models"), mode="u=rw,go=rw", recurse = T)
         }
         saveToLoc <- fs::path(saveFolder, "models")
         
