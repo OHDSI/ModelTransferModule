@@ -148,7 +148,7 @@ getModelsFromS3 <- function(
       bucket <- s3Settings$bucket[i]
       region <- s3Settings$region[i]
       
-      result <- aws.s3::get_bucket_df(bucket = bucket, region = region)
+      result <- aws.s3::get_bucket_df(bucket = bucket, region = region, max = Inf)
       paths <- fs::path(result$Key)
       
       workDir <- findWorkDir(bucket, subfolder, region)
@@ -281,7 +281,7 @@ getModelsFromGithub <- function(
 
 findWorkDir <- function(bucket, subfolder, region) {
   # list all content in the bucket
-  result <- aws.s3::get_bucket_df(bucket = bucket, region = region)
+  result <- aws.s3::get_bucket_df(bucket = bucket, region = region, max = Inf)
   # extract paths of all content
   paths <- fs::path(result$Key)
   # split paths up for easier processing
@@ -298,7 +298,7 @@ findWorkDir <- function(bucket, subfolder, region) {
 
 findAnalysesNames <- function(bucket, workDir, region) {
   # list all content in the bucket
-  result <- aws.s3::get_bucket_df(bucket = bucket, region = region)
+  result <- aws.s3::get_bucket_df(bucket = bucket, region = region, max = Inf)
   # extract paths of all content
   paths <- fs::path(result$Key)
   # filter for paths in work directory
