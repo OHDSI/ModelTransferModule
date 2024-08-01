@@ -230,7 +230,7 @@ getModelsFromGithub <- function(
       )
       for(j in 1:length(githubSettings[[i]]$githubModelsFolder)){
         githubModelsFolder <- githubSettings[[i]]$githubModelsFolder[j]  #'models'
-        githubModelFolder <- githubSettings[[i]]$githubModelFolder[j] #'full_model'
+        githubModelFolder <- if (is.null(githubSettings[[i]]$githubModelFolder[j])) "" else githubSettings[[i]]$githubModelFolder[j] #'full_model'
         
         tempModelLocation <- file.path(file.path(tempdir(), "tempGitHub"), dir(file.path(file.path(tempdir(), "tempGitHub"))), 'inst', githubModelsFolder, githubModelFolder )
         
