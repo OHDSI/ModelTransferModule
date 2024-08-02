@@ -265,15 +265,8 @@
     },
     "SqlRender": {
       "Package": "SqlRender",
-      "Version": "1.13.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "026b71f51728b52d4dd5f2d90222a09e",
-      "Requirements": [
-        "checkmate",
-        "rJava",
-        "rlang"
-      ]
+      "Version": "1.18.0",
+      "Source": "Repository"
     },
     "askpass": {
       "Package": "askpass",
@@ -1011,20 +1004,8 @@
     },
     "scales": {
       "Package": "scales",
-      "Version": "1.2.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "906cb23d2f1c5680b8ce439b44c6fa63",
-      "Requirements": [
-        "R6",
-        "RColorBrewer",
-        "farver",
-        "labeling",
-        "lifecycle",
-        "munsell",
-        "rlang",
-        "viridisLite"
-      ]
+      "Version": "1.3.0",
+      "Source": "Repository"
     },
     "snow": {
       "Package": "snow",
