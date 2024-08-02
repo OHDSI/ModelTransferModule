@@ -209,7 +209,7 @@ getModelsFromGithub <- function(
   
   info <- data.frame()
   
-  for(i in 1:length(githubSettings)){
+  for(i in 1:nrow(githubSettings)){
     
     githubUser <- githubSettings[[i]]$user #'ohdsi-studies'
     githubRepository <- githubSettings[[i]]$repository #'lungCancerPrognostic'
