@@ -61,7 +61,7 @@ execute <- function(jobContext) {
   }
   
   modelLocationsGithub <- tryCatch({getModelsFromGithub(
-    githubSettings = githubSettings$locations,
+    githubSettings = githubSettings,
     saveFolder = modelSaveLocation
   )}, error = function(e){ParallelLogger::logInfo(e); return(NULL)}
   )
@@ -211,13 +211,13 @@ getModelsFromGithub <- function(
   
   for(i in 1:length(githubSettings)){
     
-    githubUser <- githubSettings[[i]]$githubUser #'ohdsi-studies'
-    githubRepository <- githubSettings[[i]]$githubRepository #'lungCancerPrognostic'
-    githubBranch <- githubSettings[[i]]$githubBranch #'master'
+    githubUser <- githubSettings[[i]]$user #'ohdsi-studies'
+    githubRepository <- githubSettings[[i]]$repository #'lungCancerPrognostic'
+    githubBranch <- githubSettings[[i]]$ref #'master'
     
     downloadCheck <- tryCatch({
       utils::download.file(
-        url = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
+        url = file.path("https://github.com", user, repository, "archive", paste0(ref,".zip")),
         destfile = file.path(tempdir(), "tempGitHub.zip")
       )}, error = function(e){ ParallelLogger::logInfo('GitHub repository download failed') ; return(NULL)}
     )
@@ -228,11 +228,12 @@ getModelsFromGithub <- function(
         sourceFileName = file.path(tempdir(), "tempGitHub.zip"), 
         targetFolder = file.path(tempdir(), "tempGitHub")
       )
-      for(j in 1:length(githubSettings[[i]]$githubModelsFolder)){
-        githubModelsFolder <- githubSettings[[i]]$githubModelsFolder[j]  #'models'
-        githubModelFolder <- if (is.null(githubSettings[[i]]$githubModelFolder[j])) "" else githubSettings[[i]]$githubModelFolder[j] #'full_model'
+      for(j in 1:length(githubSettings[[i]]$modelsFolder)){
+        modelsFolder <- githubSettings[[i]]$modelsFolder[j]  #'models'
+        modelFolder <- if (is.null(githubSettings[[i]]$modelFolder[j])) "" else githubSettings[[i]]$modelFolder[j] #'full_model'
         
-        tempModelLocation <- file.path(file.path(tempdir(), "tempGitHub"), dir(file.path(file.path(tempdir(), "tempGitHub"))), 'inst', githubModelsFolder, githubModelFolder )
+        tempModelLocation <- file.path(file.path(tempdir(), "tempGitHub"), 
+          dir(file.path(file.path(tempdir(), "tempGitHub"))), 'inst', modelsFolder, modelFolder)
         
         if(!dir.exists(file.path(saveFolder,"models",paste0('model_github_', i, '_', j)))){
           dir.create(file.path(saveFolder,"models",paste0('model_github_', i, '_', j)), recursive = T)
@@ -251,8 +252,9 @@ getModelsFromGithub <- function(
         info <- rbind(
           info,
           data.frame(
-            githubLocation = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
-            githubPath = file.path('inst', githubModelsFolder, githubModelFolder),
+            githubLocation = file.path("https://github.com", user,
+              githubRepository, "archive", paste0(ref, ".zip")),
+            githubPath = file.path('inst', modelsFolder, modelFolder),
             modelSavedLocally = modelSaved, 
             localLocation = saveToLoc
           )
@@ -265,8 +267,9 @@ getModelsFromGithub <- function(
       info <- rbind(
         info,
         data.frame(
-          githubLocation = file.path("https://github.com",githubUser,githubRepository, "archive", paste0(githubBranch,".zip")),
-          githubPath = file.path('inst', githubSettings[[i]]$githubModelsFolder, githubSettings[[i]]$githubModelFolder),
+          githubLocation = file.path("https://github.com", user, repository,
+            "archive", paste0(ref,".zip")),
+          githubPath = file.path('inst', githubSettings[[i]]$modelsFolder, githubSettings[[i]]$modelFolder),
           modelSavedLocally = F, 
           localLocation = ''
         )
