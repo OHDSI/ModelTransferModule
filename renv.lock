@@ -64,23 +64,8 @@
     },
     "DatabaseConnector": {
       "Package": "DatabaseConnector",
-      "Version": "6.1.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Hash": "7107e8de91e9c0a3fff1948880dfafab",
-      "Requirements": [
-        "DBI",
-        "SqlRender",
-        "bit64",
-        "checkmate",
-        "dbplyr",
-        "digest",
-        "rJava",
-        "readr",
-        "rlang",
-        "stringr",
-        "urltools"
-      ]
+      "Version": "6.3.2",
+      "Source": "Repository"
     },
     "Eunomia": {
       "Package": "Eunomia",
