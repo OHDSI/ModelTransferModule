@@ -278,6 +278,11 @@
         "sys"
       ]
     },
+    "assertthat": {
+      "Package": "assertthat",
+      "Version": "0.2.1",
+      "Source": "Repository"
+    },
     "aws.s3": {
       "Package": "aws.s3",
       "Version": "0.3.21",
@@ -553,6 +558,11 @@
       "Repository": "CRAN",
       "Hash": "f7736a18de97dea803bde0a2daaafb27",
       "Requirements": []
+    },
+    "filelock": {
+      "Package": "filelock",
+      "Version": "1.0.3",
+      "Source": "Repository"
     },
     "fs": {
       "Package": "fs",
@@ -1255,6 +1265,11 @@
       "Repository": "CRAN",
       "Hash": "40682ed6a969ea5abfd351eb67833adc",
       "Requirements": []
+    },
+    "yaml": {
+      "Package": "yaml",
+      "Version": "2.3.10",
+      "Source": "Repository"
     },
     "zip": {
       "Package": "zip",
