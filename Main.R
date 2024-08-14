@@ -261,7 +261,6 @@ ModelTransferModule <- R6::R6Class(
 
       return(info)
     },
-    },
     getModelsFromLocalFiles = function(settings, saveFolder) {
       if(is.null(settings)){
       return(NULL)
