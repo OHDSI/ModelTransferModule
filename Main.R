@@ -93,7 +93,7 @@ ModelTransferModule <- R6::R6Class(
       }
     },
     createModuleSpecifications = function(settings) {
-      settings <- super$createModuleSpecifications(settings)
+      specifications <- super$createModuleSpecifications(settings)
       return(specifications)
     }
   ),
