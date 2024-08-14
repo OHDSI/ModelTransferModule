@@ -36,7 +36,7 @@ ModelTransferModule <- R6::R6Class(
 
       workFolder <- jobContext$moduleExecutionSettings$workSubFolder
       resultsFolder <- jobContext$moduleExecutionSettings$resultsSubFolder
-      modelSaveLocation <-  resultsFolder
+      modelSaveLocation <- resultsFolder
 
       s3Settings <- jobContext$settings$s3Settings
       githubSettings <- jobContext$settings$githubSettings
@@ -54,7 +54,7 @@ ModelTransferModule <- R6::R6Class(
           file = file.path(resultsFolder, "s3_export.csv")
         )
       }
-      
+
       modelLocationsGithub <- tryCatch(
         {
           private$getModelsFromGithub(
@@ -69,9 +69,10 @@ ModelTransferModule <- R6::R6Class(
       )
       if (!is.null(modelLocationsGithub)) {
         readr::write_csv(modelLocationsGithub,
-          file = file.path(resultsFolder, "github_export.csv"))
+          file = file.path(resultsFolder, "github_export.csv")
+        )
       }
-      
+
       modelLocationsLocalFiles <- tryCatch(
         {
           private$getModelsFromLocalFiles(
@@ -87,7 +88,8 @@ ModelTransferModule <- R6::R6Class(
 
       if (!is.null(modelLocationsS3)) {
         readr::write_csv(modelLocationsLocalFiles,
-          file = file.path(resultsFolder, "local_export.csv"))
+          file = file.path(resultsFolder, "local_export.csv")
+        )
       }
     },
     createModuleSpecifications = function(settings) {
@@ -97,7 +99,6 @@ ModelTransferModule <- R6::R6Class(
   ),
   private = list(
     getModelsFromS3 = function(settings, saveFolder) {
-
       if (is.null(settings)) {
         return(NULL)
       }
@@ -131,8 +132,10 @@ ModelTransferModule <- R6::R6Class(
             saveToLoc <- fs::path(saveFolder, "models")
 
             for (analysis in analyses) {
-              analysisPaths <- paths[fs::path_has_parent(paths,
-                fs::path(workDir, analysis))]
+              analysisPaths <- paths[fs::path_has_parent(
+                paths,
+                fs::path(workDir, analysis)
+              )]
 
               for (obj in analysisPaths) {
                 # split work directory from path
@@ -148,12 +151,16 @@ ModelTransferModule <- R6::R6Class(
               ParallelLogger::logInfo(paste0("Downloaded: ", analysis, " to ", saveToLoc))
             }
           } else {
-            ParallelLogger::logInfo(paste0("No ", settings$modelZipLocation[i],
-              " in bucket ", settings$bucket[i], " in region ", settings$region[i]))
+            ParallelLogger::logInfo(paste0(
+              "No ", settings$modelZipLocation[i],
+              " in bucket ", settings$bucket[i], " in region ", settings$region[i]
+            ))
           }
         } else {
-          ParallelLogger::logInfo(paste0("No bucket ", settings$bucket[i],
-            " in region ", settings$region[i]))
+          ParallelLogger::logInfo(paste0(
+            "No bucket ", settings$bucket[i],
+            " in region ", settings$region[i]
+          ))
         }
 
         info <- rbind(
@@ -205,7 +212,8 @@ ModelTransferModule <- R6::R6Class(
             modelsFolder <- settings[i, ]$modelsFolder[j] #' models'
             modelFolder <- if (is.null(settings[i, ]$modelFolder[j])) "" else settings[i, ]$modelFolder[j] #' full_model'
 
-            tempModelLocation <- file.path(tempdir(),
+            tempModelLocation <- file.path(
+              tempdir(),
               "tempGitHub",
               paste0(repository, "-", ref),
               "inst",
@@ -213,10 +221,14 @@ ModelTransferModule <- R6::R6Class(
               modelFolder
             )
 
-            if (!dir.exists(file.path(saveFolder, "models",
-              paste0("model_github_", repository, "_", ref)))) {
-              dir.create(file.path(saveFolder, "models",
-                paste0("model_github_", repository, "_", ref)), recursive = TRUE)
+            if (!dir.exists(file.path(
+              saveFolder, "models",
+              paste0("model_github_", repository, "_", ref)
+            ))) {
+              dir.create(file.path(
+                saveFolder, "models",
+                paste0("model_github_", repository, "_", ref)
+              ), recursive = TRUE)
             }
             for (dirEntry in dir(tempModelLocation)) {
               file.copy(
@@ -250,8 +262,10 @@ ModelTransferModule <- R6::R6Class(
                 "https://github.com", user, repository,
                 "archive", paste0(ref, ".zip")
               ),
-              githubPath = file.path("inst", settings[i, ]$modelsFolder,
-                githubSettings[i, ]$modelFolder),
+              githubPath = file.path(
+                "inst", settings[i, ]$modelsFolder,
+                githubSettings[i, ]$modelFolder
+              ),
               modelSavedLocally = FALSE,
               localLocation = ""
             )
@@ -261,22 +275,22 @@ ModelTransferModule <- R6::R6Class(
       return(info)
     },
     getModelsFromLocalFiles = function(settings, saveFolder) {
-      if(is.null(settings)){
-      return(NULL)
+      if (is.null(settings)) {
+        return(NULL)
       }
-  
-      if(!fs::dir_exists(fs::path(saveFolder, "models"))){
+
+      if (!fs::dir_exists(fs::path(saveFolder, "models"))) {
         dir.create(fs::path(saveFolder, "models"), recursive = TRUE)
       }
-  
+
       saveFolder <- fs::path(saveFolder, "models")
-      
+
       localFileSettings <- fs::path_expand(settings)
       saveFolder <- fs::path_expand(saveFolder)
-      
+
       contents <- fs::dir_ls(settings)
-  
-      for(item in contents){
+
+      for (item in contents) {
         # Determine the target path in the destination folder
         targetPath <- fs::path(saveFolder, fs::path_file(item))
         # Copy the item to the destination
@@ -290,7 +304,7 @@ ModelTransferModule <- R6::R6Class(
       info <- data.frame()
       return(info)
     },
-    findWorkDir <- function(bucket, subfolder, region) {
+    findWorkDir = function(bucket, subfolder, region) {
       # list all content in the bucket
       result <- aws.s3::get_bucket_df(bucket = bucket, region = region, max = Inf)
       # extract paths of all content
@@ -306,7 +320,7 @@ ModelTransferModule <- R6::R6Class(
 
       return(subfolderPath)
     },
-    findAnalysesNames <- function(bucket, workDir, region) {
+    findAnalysesNames = function(bucket, workDir, region) {
       # list all content in the bucket
       result <- aws.s3::get_bucket_df(bucket = bucket, region = region, max = Inf)
       # extract paths of all content
