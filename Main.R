@@ -18,8 +18,6 @@ ModelTransferModule <- R6::R6Class(
   classname = "ModelTransferModule",
   inherit = Strategus::StrategusModule,
   public = list(
-    # no results produced/uploaded from this module
-    tablePrefix = "",
     initialize = function() {
       super$initialize()
     },
@@ -38,59 +36,8 @@ ModelTransferModule <- R6::R6Class(
       resultsFolder <- jobContext$moduleExecutionSettings$resultsSubFolder
       modelSaveLocation <- resultsFolder
 
-      s3Settings <- jobContext$settings$s3Settings
-      githubSettings <- jobContext$settings$githubSettings
-      localFileSettings <- jobContext$settings$localFileSettings
-
-      modelLocationsS3 <- tryCatch(private$getModelsFromS3(
-        settings = s3Settings,
-        saveFolder = modelSaveLocation
-      ), error = function(e) {
-        ParallelLogger::logInfo(e)
-        return(NULL)
-      })
-      if (!is.null(modelLocationsS3)) {
-        readr::write_csv(modelLocationsS3,
-          file = file.path(resultsFolder, "s3_export.csv")
-        )
-      }
-
-      modelLocationsGithub <- tryCatch(
-        {
-          private$getModelsFromGithub(
-            settings = githubSettings,
-            saveFolder = modelSaveLocation
-          )
-        },
-        error = function(e) {
-          ParallelLogger::logInfo(e)
-          return(NULL)
-        }
-      )
-      if (!is.null(modelLocationsGithub)) {
-        readr::write_csv(modelLocationsGithub,
-          file = file.path(resultsFolder, "github_export.csv")
-        )
-      }
-
-      modelLocationsLocalFiles <- tryCatch(
-        {
-          private$getModelsFromLocalFiles(
-            settings = localFileSettings$locations,
-            saveFolder = modelSaveLocation
-          )
-        },
-        error = function(e) {
-          ParallelLogger::logInfo(e)
-          return(NULL)
-        }
-      )
-
-      if (!is.null(modelLocationsS3)) {
-        readr::write_csv(modelLocationsLocalFiles,
-          file = file.path(resultsFolder, "local_export.csv")
-        )
-      }
+      settings <- jobContext$settings
+      private$getModels(settings, modelSaveLocation)
     },
     createModuleSpecifications = function(settings) {
       specifications <- super$createModuleSpecifications(settings)
@@ -98,11 +45,71 @@ ModelTransferModule <- R6::R6Class(
     }
   ),
   private = list(
+    getModels = function(settings, saveFolder) {
+      if (inherits(settings, "githubSettings")) {
+        modellocationsgithub <- trycatch(
+          {
+            private$getmodelsfromgithub(
+              settings = githubsettings,
+              savefolder = modelsavelocation
+            )
+          },
+          error = function(e) {
+            parallellogger::loginfo(e)
+            return(null)
+          }
+        )
+        if (!is.null(modellocationsgithub)) {
+          readr::write_csv(modellocationsgithub,
+            file = file.path(resultsfolder, "github_export.csv")
+          )
+        }
+      } else if (inherits(settings, "s3Settings")) {
+        modellocationss3 <- trycatch(
+          {
+            private$getmodelsfroms3(
+              settings = settings,
+              savefolder = modelsavelocation
+            )
+          },
+          error = function(e) {
+            parallellogger::loginfo(e)
+            return(null)
+          }
+        )
+        if (!is.null(modellocationss3)) {
+          readr::write_csv(modellocationss3,
+            file = file.path(resultsfolder, "s3_export.csv")
+          )
+        }
+      } else if (inherits(settings, "localFileSettings")) {
+        modellocationslocalfiles <- trycatch(
+          {
+            private$getmodelsfromlocalfiles(
+              settings = localfilesettings$locations,
+              savefolder = modelsavelocation
+            )
+          },
+          error = function(e) {
+            parallellogger::loginfo(e)
+            return(null)
+          }
+        )
+        if (!is.null(modellocationslocalfiles)) {
+          readr::write_csv(modellocationslocalfiles,
+            file = file.path(resultsfolder, "local_export.csv")
+          )
+        } 
+      } else {
+          parallelLogger::logInfo("No settings of correct class provided for model transfer, 
+            should be one of githubSettings, s3Settings or localFileSettings")
+        }
+    },
     getModelsFromS3 = function(settings, saveFolder) {
       if (is.null(settings)) {
         return(NULL)
       }
-
+      parallelLogger::loginfo("Downloading models from S3")
       info <- data.frame()
 
       for (i in seq_len(nrow(settings))) {
@@ -179,6 +186,7 @@ ModelTransferModule <- R6::R6Class(
       if (is.null(settings)) {
         return(NULL)
       }
+      parallelLogger::logInfo("Downloading models from GitHub")
 
       info <- data.frame()
       for (i in seq_len(nrow(settings))) {
@@ -278,7 +286,7 @@ ModelTransferModule <- R6::R6Class(
       if (is.null(settings)) {
         return(NULL)
       }
-
+      parallelLogger::logInfo("Copying models from local files")
       if (!fs::dir_exists(fs::path(saveFolder, "models"))) {
         dir.create(fs::path(saveFolder, "models"), recursive = TRUE)
       }
