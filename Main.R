@@ -80,38 +80,41 @@ execute <- function(jobContext) {
   
 }
 
-getModelsFromLocalFiles <- function(
-    localFileSettings,
-    saveFolder
-){
+getModelsFromLocalFiles <- function(localFileSettings, saveFolder) {
   
-  if(is.null(localFileSettings)){
+  if (is.null(localFileSettings)) {
     return(NULL)
   }
   
-  if(!fs::dir_exists(fs::path(saveFolder, "models"))){
-    dir.create(fs::path(saveFolder, "models"), recursive = T)
+  if (!dir.exists(file.path(saveFolder, "models"))) {
+    dir.create(file.path(saveFolder, "models"), recursive = TRUE)
   }
   
-  saveFolder <- fs::path(saveFolder, "models")
+  saveFolder <- file.path(saveFolder, "models")
   
   localFileSettings <- fs::path_expand(localFileSettings)
   saveFolder <- fs::path_expand(saveFolder)
   
-  contents <- fs::dir_ls(localFileSettings)
+  contents <- list.files(localFileSettings, recursive = TRUE, full.names = TRUE, include.dirs = FALSE)
   
-  for(item in contents){
-    # Determine the target path in the destination folder
-    targetPath <- fs::path(saveFolder, fs::path_file(item))
-    # Copy the item to the destination
+  for (item in contents) {
+    relativePath <- fs::path_rel(item, start = localFileSettings)
+    targetPath <- file.path(saveFolder, relativePath)
+    targetDir <- dirname(targetPath)
+    
+    if (!dir.exists(targetDir)) {
+      dir.create(targetDir, recursive = TRUE)
+    }
+    
     if (fs::dir_exists(item)) {
-      dir.create(targetPath) # Ensure the directory exists before copying into it
-      fs::dir_copy(item, targetPath)
+      if (!dir.exists(targetPath)) {
+        dir.create(targetPath, recursive = TRUE)
+      }
     } else {
-      fs::file_copy(item, targetPath)
+      file.copy(item, targetPath, overwrite = TRUE)
     }
   }
-
+  
   info <- data.frame()
   return(info)
 }
